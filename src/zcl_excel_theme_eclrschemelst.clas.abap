@@ -41,7 +41,7 @@ CLASS zcl_excel_theme_eclrschemelst IMPLEMENTATION.
 
 
   METHOD load.
-    "! so far copy only existing values
+    " so far copy only existing values
     extracolor ?= io_extra_color.
   ENDMETHOD.                    "load
 ENDCLASS.

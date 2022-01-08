@@ -356,10 +356,14 @@ CLASS zcl_excel_worksheet DEFINITION
         zcx_excel .
     METHODS get_columns
       RETURNING
-        VALUE(eo_columns) TYPE REF TO zcl_excel_columns .
+        VALUE(eo_columns) TYPE REF TO zcl_excel_columns
+      RAISING
+        zcx_excel .
     METHODS get_columns_iterator
       RETURNING
-        VALUE(eo_iterator) TYPE REF TO zcl_excel_collection_iterator .
+        VALUE(eo_iterator) TYPE REF TO zcl_excel_collection_iterator
+      RAISING
+        zcx_excel .
     METHODS get_style_cond_iterator
       RETURNING
         VALUE(eo_iterator) TYPE REF TO zcl_excel_collection_iterator .
