@@ -94,6 +94,14 @@ CLASS zcl_excel DEFINITION
         !ip_cstylex_complete TYPE zexcel_s_cstylex_complete
       RETURNING
         VALUE(ep_guid)       TYPE zexcel_cell_style .
+    METHODS get_style_from_guid2
+      IMPORTING
+        !ip_guid         TYPE zexcel_cell_style
+      EXPORTING
+        !eo_style        TYPE REF TO zcl_excel_style
+        !es_stylemapping TYPE zexcel_s_stylemapping
+      RAISING
+        zcx_excel.
     METHODS get_styles_iterator
       RETURNING
         VALUE(eo_iterator) TYPE REF TO zcl_excel_collection_iterator .
@@ -493,6 +501,20 @@ CLASS zcl_excel IMPLEMENTATION.
         RETURN.
       ENDIF.
     ENDWHILE.
+
+  ENDMETHOD.
+
+
+  METHOD get_style_from_guid2.
+
+    READ TABLE me->t_stylemapping2 INTO es_stylemapping WITH TABLE KEY guid = ip_guid.
+    IF sy-subrc <> 0.
+      zcx_excel=>raise_text( 'GUID not found' ).
+    ENDIF.
+
+    IF es_stylemapping-dynamic_style_guid IS NOT INITIAL.
+      eo_style = get_style_from_guid( ip_guid ).
+    ENDIF.
 
   ENDMETHOD.
 

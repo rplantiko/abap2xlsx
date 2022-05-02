@@ -1241,6 +1241,20 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
           ld_date_char                 TYPE c LENGTH 50,
           ld_font_height               TYPE tdfontsize VALUE zcl_excel_font=>lc_default_font_height,
           ld_font_name                 TYPE zexcel_style_font_name VALUE zcl_excel_font=>lc_default_font_name.
+    DATA: lo_style TYPE REF TO zcl_excel_style,
+          BEGIN OF ls_stylex,
+            font_size   TYPE flag,
+            font_name   TYPE flag,
+            font_bold   TYPE flag,
+            font_italic TYPE flag,
+          END OF ls_stylex,
+          BEGIN OF ls_style,
+            format_code TYPE zexcel_number_format,
+            font_size   TYPE zexcel_style_font_size,
+            font_name   TYPE zexcel_style_font_name,
+            font_bold   TYPE flag,
+            font_italic TYPE flag,
+          END OF ls_style.
 
     " Determine cell content and cell style
     me->get_cell( EXPORTING ip_column = ip_column
@@ -1280,11 +1294,34 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
     IF ld_style_guid IS NOT INITIAL.
       TRY.
           " Read style attributes
-          ls_stylemapping = me->excel->get_style_to_guid( ld_style_guid ).
+          excel->get_style_from_guid2( EXPORTING ip_guid = ld_style_guid IMPORTING es_stylemapping = ls_stylemapping eo_style = lo_style ).
+
+          CLEAR: ls_style, ls_stylex.
+          IF lo_style IS NOT BOUND.
+            ls_style-format_code  = ls_stylemapping-complete_style-number_format-format_code.
+            ls_stylex-font_size   = ls_stylemapping-complete_stylex-font-size.
+            ls_stylex-font_name   = ls_stylemapping-complete_stylex-font-name.
+            ls_stylex-font_bold   = ls_stylemapping-complete_stylex-font-bold.
+            ls_stylex-font_italic = ls_stylemapping-complete_stylex-font-italic.
+            ls_style-font_size    = ls_stylemapping-complete_style-font-size.
+            ls_style-font_name    = ls_stylemapping-complete_style-font-name.
+            ls_style-font_bold    = ls_stylemapping-complete_style-font-bold.
+            ls_style-font_italic  = ls_stylemapping-complete_style-font-italic.
+          ELSE.
+            ls_style-format_code  = lo_style->number_format->format_code.
+            ls_stylex-font_size   = abap_true.
+            ls_stylex-font_name   = abap_true.
+            ls_stylex-font_bold   = abap_true.
+            ls_stylex-font_italic = abap_true.
+            ls_style-font_size    = lo_style->font->size.
+            ls_style-font_name    = lo_style->font->name.
+            ls_style-font_bold    = lo_style->font->bold.
+            ls_style-font_italic  = lo_style->font->italic.
+          ENDIF.
 
           " If the current cell contains the default date format,
           " convert the cell value to a date and calculate its length
-          IF ls_stylemapping-complete_style-number_format-format_code =
+          IF ls_style-format_code =
              zcl_excel_style_number_format=>c_format_date_std.
 
             " Convert excel date to ABAP date
@@ -1301,22 +1338,22 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
 
           " Read the font size and convert it to the font height
           " used by SAPscript (multiplication by 10)
-          IF ls_stylemapping-complete_stylex-font-size = abap_true.
-            ld_font_height = ls_stylemapping-complete_style-font-size * 10.
+          IF ls_stylex-font_size = abap_true.
+            ld_font_height = ls_style-font_size * 10.
           ENDIF.
 
           " If set, remember the font name
-          IF ls_stylemapping-complete_stylex-font-name = abap_true.
-            ld_font_name = ls_stylemapping-complete_style-font-name.
+          IF ls_stylex-font_name = abap_true.
+            ld_font_name = ls_style-font_name.
           ENDIF.
 
           " If set, remember whether font is bold and italic.
-          IF ls_stylemapping-complete_stylex-font-bold = abap_true.
-            ld_flag_bold = ls_stylemapping-complete_style-font-bold.
+          IF ls_stylex-font_bold = abap_true.
+            ld_flag_bold = ls_style-font_bold.
           ENDIF.
 
-          IF ls_stylemapping-complete_stylex-font-italic = abap_true.
-            ld_flag_italic = ls_stylemapping-complete_style-font-italic.
+          IF ls_stylex-font_italic = abap_true.
+            ld_flag_italic = ls_style-font_italic.
           ENDIF.
 
         CATCH zcx_excel.                                "#EC NO_HANDLER
