@@ -501,15 +501,15 @@ CLASS zcl_excel IMPLEMENTATION.
       WHILE lo_iterator->has_next( ) = abap_true.
         lo_style ?= lo_iterator->get_next( ).
         IF lo_style->get_guid( ) = ip_guid.
+          IF ip_conv_class_to_struct = abap_true.
+            zcl_excel_common=>recursive_class_to_struct( EXPORTING i_source  = lo_style
+                                                         CHANGING  e_target  = es_stylemapping-complete_style
+                                                                   e_targetx = es_stylemapping-complete_stylex ).
+          ENDIF.
           eo_style = lo_style.
           RETURN.
         ENDIF.
       ENDWHILE.
-      IF lo_style IS BOUND AND ip_conv_class_to_struct = abap_true.
-        zcl_excel_common=>recursive_class_to_struct( EXPORTING i_source  = lo_style
-                                                     CHANGING  e_target  = es_stylemapping-complete_style
-                                                               e_targetx = es_stylemapping-complete_stylex ).
-      ENDIF.
     ENDIF.
 
   ENDMETHOD.
