@@ -289,7 +289,7 @@
      <CLSNAME>ZCL_EXCEL</CLSNAME>
      <CMPNAME>GET_STYLE_FROM_GUID</CMPNAME>
      <LANGU>E</LANGU>
-     <DESCRIPT>Return a style object from a GUID</DESCRIPT>
+     <DESCRIPT>Get style as either structure or object</DESCRIPT>
     </SEOCOMPOTX>
     <SEOCOMPOTX>
      <CLSNAME>ZCL_EXCEL</CLSNAME>
@@ -307,7 +307,7 @@
      <CLSNAME>ZCL_EXCEL</CLSNAME>
      <CMPNAME>GET_STYLE_TO_GUID</CMPNAME>
      <LANGU>E</LANGU>
-     <DESCRIPT>Get style(structure) for guid</DESCRIPT>
+     <DESCRIPT>Obsolete. Prefer using GET_STYLE_FROM_GUID.</DESCRIPT>
     </SEOCOMPOTX>
     <SEOCOMPOTX>
      <CLSNAME>ZCL_EXCEL</CLSNAME>

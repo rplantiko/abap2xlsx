@@ -1294,7 +1294,9 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
     IF ld_style_guid IS NOT INITIAL.
       TRY.
           " Read style attributes
-          excel->get_style_from_guid2( EXPORTING ip_guid = ld_style_guid IMPORTING es_stylemapping = ls_stylemapping eo_style = lo_style ).
+          excel->get_style_from_guid( EXPORTING ip_guid         = ld_style_guid
+                                      IMPORTING es_stylemapping = ls_stylemapping
+                                                eo_style        = lo_style ).
 
           CLEAR: ls_style, ls_stylex.
           IF lo_style IS NOT BOUND.

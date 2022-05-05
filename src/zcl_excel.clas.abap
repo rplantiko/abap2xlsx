@@ -94,12 +94,14 @@ CLASS zcl_excel DEFINITION
         !ip_cstylex_complete TYPE zexcel_s_cstylex_complete
       RETURNING
         VALUE(ep_guid)       TYPE zexcel_cell_style .
-    METHODS get_style_from_guid2
+    "! <p class="shorttext synchronized" lang="en">Get style as either structure or object</p>
+    METHODS get_style_from_guid
       IMPORTING
-        !ip_guid         TYPE zexcel_cell_style
+        !ip_guid                 TYPE zexcel_cell_style
+        !ip_conv_class_to_struct TYPE abap_bool DEFAULT abap_false
       EXPORTING
-        !eo_style        TYPE REF TO zcl_excel_style
-        !es_stylemapping TYPE zexcel_s_stylemapping
+        !eo_style                TYPE REF TO zcl_excel_style
+        !es_stylemapping         TYPE zexcel_s_stylemapping
       RAISING
         zcx_excel.
     METHODS get_styles_iterator
@@ -112,6 +114,7 @@ CLASS zcl_excel DEFINITION
         VALUE(ep_index) TYPE i
       RAISING
         zcx_excel .
+    "! <p class="shorttext synchronized" lang="en">Obsolete. Prefer using GET_STYLE_FROM_GUID.</p>
     METHODS get_style_to_guid
       IMPORTING
         !ip_guid               TYPE zexcel_cell_style
@@ -180,11 +183,6 @@ CLASS zcl_excel DEFINITION
     DATA theme TYPE REF TO zcl_excel_theme .
     DATA comments TYPE REF TO zcl_excel_comments .
 
-    METHODS get_style_from_guid
-      IMPORTING
-        !ip_guid        TYPE zexcel_cell_style
-      RETURNING
-        VALUE(eo_style) TYPE REF TO zcl_excel_style .
     METHODS stylemapping_dynamic_style
       IMPORTING
         !ip_style        TYPE REF TO zcl_excel_style
@@ -493,27 +491,25 @@ CLASS zcl_excel IMPLEMENTATION.
     DATA: lo_style    TYPE REF TO zcl_excel_style,
           lo_iterator TYPE REF TO zcl_excel_collection_iterator.
 
-    lo_iterator = styles->get_iterator( ).
-    WHILE lo_iterator->has_next( ) = abap_true.
-      lo_style ?= lo_iterator->get_next( ).
-      IF lo_style->get_guid( ) = ip_guid.
-        eo_style = lo_style.
-        RETURN.
-      ENDIF.
-    ENDWHILE.
-
-  ENDMETHOD.
-
-
-  METHOD get_style_from_guid2.
-
     READ TABLE me->t_stylemapping2 INTO es_stylemapping WITH TABLE KEY guid = ip_guid.
     IF sy-subrc <> 0.
       zcx_excel=>raise_text( 'GUID not found' ).
     ENDIF.
 
     IF es_stylemapping-dynamic_style_guid IS NOT INITIAL.
-      eo_style = get_style_from_guid( ip_guid ).
+      lo_iterator = styles->get_iterator( ).
+      WHILE lo_iterator->has_next( ) = abap_true.
+        lo_style ?= lo_iterator->get_next( ).
+        IF lo_style->get_guid( ) = ip_guid.
+          eo_style = lo_style.
+          RETURN.
+        ENDIF.
+      ENDWHILE.
+      IF lo_style IS BOUND AND ip_conv_class_to_struct = abap_true.
+        zcl_excel_common=>recursive_class_to_struct( EXPORTING i_source  = lo_style
+                                                     CHANGING  e_target  = es_stylemapping-complete_style
+                                                               e_targetx = es_stylemapping-complete_stylex ).
+      ENDIF.
     ENDIF.
 
   ENDMETHOD.
@@ -546,19 +542,9 @@ CLASS zcl_excel IMPLEMENTATION.
 
 
   METHOD get_style_to_guid.
-    DATA: lo_style TYPE REF TO zcl_excel_style.
-    " # issue 139
-    READ TABLE me->t_stylemapping2 INTO ep_stylemapping WITH TABLE KEY guid = ip_guid.
-    IF sy-subrc <> 0.
-      zcx_excel=>raise_text( 'GUID not found' ).
-    ENDIF.
-
-    IF ep_stylemapping-dynamic_style_guid IS NOT INITIAL.
-      lo_style = me->get_style_from_guid( ip_guid ).
-      zcl_excel_common=>recursive_class_to_struct( EXPORTING i_source = lo_style
-                                                   CHANGING  e_target =  ep_stylemapping-complete_style
-                                                             e_targetx = ep_stylemapping-complete_stylex ).
-    ENDIF.
+    get_style_from_guid( EXPORTING ip_guid                 = ip_guid
+                                   ip_conv_class_to_struct = abap_true
+                         IMPORTING es_stylemapping         = ep_stylemapping ).
   ENDMETHOD.
 
 
