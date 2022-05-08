@@ -52,6 +52,7 @@ CLASS zcl_excel_graph_line DEFINITION
     CONSTANTS c_symbol_auto TYPE string VALUE 'auto'.       "#EC NOTEXT
     CONSTANTS c_symbol_none TYPE string VALUE 'none'.       "#EC NOTEXT
 
+    METHODS clone REDEFINITION.
     METHODS create_ax
       IMPORTING
         !ip_axid          TYPE string OPTIONAL
@@ -92,6 +93,7 @@ CLASS zcl_excel_graph_line DEFINITION
   PROTECTED SECTION.
 *"* protected components of class ZCL_EXCEL_GRAPH_LINE
 *"* do not include other source files here!!!
+    METHODS clone_attributes_to REDEFINITION.
   PRIVATE SECTION.
 *"* private components of class ZCL_EXCEL_GRAPH_LINE
 *"* do not include other source files here!!!
@@ -100,6 +102,39 @@ ENDCLASS.
 
 
 CLASS zcl_excel_graph_line IMPLEMENTATION.
+
+
+  METHOD clone.
+    DATA: lo_line TYPE REF TO zcl_excel_graph_line.
+
+    CREATE OBJECT lo_line TYPE zcl_excel_graph_line.
+    clone_attributes_to( lo_line ).
+
+    ro_object = lo_line.
+  ENDMETHOD.
+
+
+  METHOD clone_attributes_to.
+    DATA: lo_line TYPE REF TO zcl_excel_graph_line.
+
+    super->clone_attributes_to( io_excel_graph ).
+
+    lo_line ?= io_excel_graph.
+    lo_line->ns_groupingval       = ns_groupingval.
+    lo_line->ns_varycolorsval     = ns_varycolorsval.
+    lo_line->ns_showlegendkeyval  = ns_showlegendkeyval.
+    lo_line->ns_showvalval        = ns_showvalval.
+    lo_line->ns_showcatnameval    = ns_showcatnameval.
+    lo_line->ns_showsernameval    = ns_showsernameval.
+    lo_line->ns_showpercentval    = ns_showpercentval.
+    lo_line->ns_showbubblesizeval = ns_showbubblesizeval.
+    lo_line->ns_markerval         = ns_markerval.
+    lo_line->ns_smoothval         = ns_smoothval.
+    lo_line->axes                 = axes.
+    lo_line->ns_legendposval      = ns_legendposval.
+    lo_line->ns_overlayval        = ns_overlayval.
+
+  ENDMETHOD.
 
 
   METHOD create_ax.

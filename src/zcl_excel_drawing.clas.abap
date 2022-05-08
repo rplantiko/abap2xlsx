@@ -1,7 +1,8 @@
 CLASS zcl_excel_drawing DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM zcl_excel_base.
 
   PUBLIC SECTION.
 *"* public components of class ZCL_EXCEL_DRAWING
@@ -36,6 +37,12 @@ CLASS zcl_excel_drawing DEFINITION
                  c14 TYPE string VALUE 'http://schemas.microsoft.com/office/drawing/2007/8/2/chart',
                END OF namespace.
 
+    METHODS clone REDEFINITION.
+    METHODS clone_attributes_to
+      IMPORTING
+        io_excel_drawing type ref to zcl_excel_drawing
+      RAISING
+        zcx_excel.
     METHODS constructor
       IMPORTING
         !ip_type  TYPE zexcel_drawing_type DEFAULT zcl_excel_drawing=>type_image
@@ -154,10 +161,11 @@ ENDCLASS.
 
 
 
-CLASS ZCL_EXCEL_DRAWING IMPLEMENTATION.
+CLASS zcl_excel_drawing IMPLEMENTATION.
 
 
   METHOD constructor.
+    super->constructor( ).
 
     me->guid = zcl_excel_obsolete_func_wrap=>guid_create( ).      " ins issue #379 - replacement for outdated function call
 
@@ -1140,4 +1148,36 @@ CLASS ZCL_EXCEL_DRAWING IMPLEMENTATION.
     me->anchor = lv_anchor.
 
   ENDMETHOD.
+
+
+  METHOD clone.
+    DATA lo_excel_drawing TYPE REF TO zcl_excel_drawing.
+
+    CREATE OBJECT lo_excel_drawing.
+    clone_attributes_to( lo_excel_drawing ).
+
+    ro_object = lo_excel_drawing.
+  ENDMETHOD.
+
+
+  METHOD clone_attributes_to.
+
+    IF graph IS BOUND.
+      io_excel_drawing->graph ?= graph->clone( ).
+    ENDIF.
+
+    io_excel_drawing->anchor        = anchor.
+    io_excel_drawing->from_loc      = from_loc.
+    io_excel_drawing->graph_type    = graph_type.
+    io_excel_drawing->io            = io.
+    io_excel_drawing->media         = media.
+    io_excel_drawing->media_key_www = media_key_www.
+    io_excel_drawing->media_source  = media_source.
+    io_excel_drawing->media_type    = media_type.
+    io_excel_drawing->size          = size.
+    io_excel_drawing->to_loc        = to_loc.
+    io_excel_drawing->type          = type.
+
+  ENDMETHOD.
+
 ENDCLASS.

@@ -54,6 +54,7 @@ CLASS zcl_excel_graph_bars DEFINITION
     CONSTANTS c_invertifnegative_yes TYPE string VALUE '1'. "#EC NOTEXT
     CONSTANTS c_invertifnegative_no TYPE string VALUE '0'.  "#EC NOTEXT
 
+    METHODS clone REDEFINITION.
     METHODS create_ax
       IMPORTING
         !ip_axid          TYPE string OPTIONAL
@@ -94,6 +95,7 @@ CLASS zcl_excel_graph_bars DEFINITION
   PROTECTED SECTION.
 *"* protected components of class ZCL_EXCEL_GRAPH_BARS
 *"* do not include other source files here!!!
+    METHODS clone_attributes_to REDEFINITION.
   PRIVATE SECTION.
 *"* private components of class ZCL_EXCEL_GRAPH_BARS
 *"* do not include other source files here!!!
@@ -102,6 +104,40 @@ ENDCLASS.
 
 
 CLASS zcl_excel_graph_bars IMPLEMENTATION.
+
+
+  METHOD clone.
+    DATA: lo_bars TYPE REF TO zcl_excel_graph_bars.
+
+    CREATE OBJECT lo_bars TYPE zcl_excel_graph_bars.
+    clone_attributes_to( lo_bars ).
+
+    ro_object = lo_bars.
+  ENDMETHOD.
+
+
+  METHOD clone_attributes_to.
+    DATA: lo_bars TYPE REF TO zcl_excel_graph_bars.
+
+    super->clone_attributes_to( io_excel_graph ).
+
+    lo_bars ?= io_excel_graph.
+
+    lo_bars->ns_bardirval         = ns_bardirval.
+    lo_bars->ns_groupingval       = ns_groupingval.
+    lo_bars->ns_varycolorsval     = ns_varycolorsval.
+    lo_bars->ns_showlegendkeyval  = ns_showlegendkeyval .
+    lo_bars->ns_showvalval        = ns_showvalval.
+    lo_bars->ns_showcatnameval    = ns_showcatnameval.
+    lo_bars->ns_showsernameval    = ns_showsernameval.
+    lo_bars->ns_showpercentval    = ns_showpercentval.
+    lo_bars->ns_showbubblesizeval = ns_showbubblesizeval.
+    lo_bars->ns_gapwidthval       = ns_gapwidthval.
+    lo_bars->axes                 = axes.
+    lo_bars->ns_legendposval      = ns_legendposval.
+    lo_bars->ns_overlayval        = ns_overlayval.
+
+  ENDMETHOD.
 
 
   METHOD create_ax.

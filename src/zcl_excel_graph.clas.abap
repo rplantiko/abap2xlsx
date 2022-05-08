@@ -1,6 +1,7 @@
 CLASS zcl_excel_graph DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM zcl_excel_base.
 
   PUBLIC SECTION.
 
@@ -292,6 +293,7 @@ CLASS zcl_excel_graph DEFINITION
     CONSTANTS c_print_lbl_true TYPE c VALUE '1'.            "#EC NOTEXT
     CONSTANTS c_print_lbl_false TYPE c VALUE '0'.           "#EC NOTEXT
 
+    METHODS clone REDEFINITION.
     METHODS constructor .
     METHODS create_serie
       IMPORTING
@@ -324,6 +326,9 @@ CLASS zcl_excel_graph DEFINITION
   PROTECTED SECTION.
 *"* protected components of class ZCL_EXCEL_GRAPH
 *"* do not include other source files here!!!
+    METHODS clone_attributes_to
+      IMPORTING
+        io_excel_graph TYPE REF TO zcl_excel_graph.
   PRIVATE SECTION.
 *"* private components of class ZCL_EXCEL_GRAPH
 *"* do not include other source files here!!!
@@ -335,6 +340,7 @@ CLASS zcl_excel_graph IMPLEMENTATION.
 
 
   METHOD constructor.
+    super->constructor( ).
     "Load default values
     me->pagemargins-b = '0.75'.
     me->pagemargins-l = '0.7'.
@@ -406,5 +412,34 @@ CLASS zcl_excel_graph IMPLEMENTATION.
 
   METHOD set_title.
     me->title = ip_value.
+  ENDMETHOD.
+
+
+  METHOD clone.
+    DATA lo_excel_graph TYPE REF TO zcl_excel_graph.
+
+    CREATE OBJECT lo_excel_graph.
+    clone_attributes_to( lo_excel_graph ).
+
+    ro_object = lo_excel_graph.
+  ENDMETHOD.
+
+
+  METHOD clone_attributes_to.
+
+    io_excel_graph->ns_1904val              = ns_1904val.
+    io_excel_graph->ns_autotitledeletedval  = ns_autotitledeletedval.
+    io_excel_graph->ns_c14styleval          = ns_c14styleval.
+    io_excel_graph->ns_dispblanksasval      = ns_dispblanksasval.
+    io_excel_graph->ns_langval              = ns_langval.
+    io_excel_graph->ns_plotvisonlyval       = ns_plotvisonlyval.
+    io_excel_graph->ns_roundedcornersval    = ns_roundedcornersval.
+    io_excel_graph->ns_showdlblsovermaxval  = ns_showdlblsovermaxval.
+    io_excel_graph->ns_styleval             = ns_styleval.
+    io_excel_graph->pagemargins             = pagemargins.
+    io_excel_graph->print_label             = print_label.
+    io_excel_graph->series                  = series.
+    io_excel_graph->title                   = title.
+
   ENDMETHOD.
 ENDCLASS.

@@ -1,7 +1,8 @@
 CLASS zcl_excel_table DEFINITION
   PUBLIC
   FINAL
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM zcl_excel_base.
 
 *"* public components of class ZCL_EXCEL_TABLE
 *"* do not include other source files here!!!
@@ -75,6 +76,7 @@ CLASS zcl_excel_table DEFINITION
     CONSTANTS builtinstyle_medium25 TYPE zexcel_table_style VALUE 'TableStyleMedium26'. "#EC NOTEXT
     CONSTANTS builtinstyle_medium27 TYPE zexcel_table_style VALUE 'TableStyleMedium27'. "#EC NOTEXT
 
+    METHODS clone REDEFINITION.
     METHODS get_totals_formula
       IMPORTING
         !ip_column        TYPE clike
@@ -300,5 +302,20 @@ CLASS zcl_excel_table IMPLEMENTATION.
 
   METHOD set_id.
     id = iv_id.
+  ENDMETHOD.
+
+
+  METHOD clone.
+    DATA lo_excel_table TYPE REF TO zcl_excel_table.
+
+    CREATE OBJECT lo_excel_table.
+
+    lo_excel_table->fieldcat    = fieldcat.
+    lo_excel_table->id          = id.
+    lo_excel_table->name        = name.
+    lo_excel_table->settings    = settings.
+    lo_excel_table->table_data  = table_data.
+
+    ro_object = lo_excel_table.
   ENDMETHOD.
 ENDCLASS.

@@ -48,6 +48,14 @@ CLASS zcl_excel DEFINITION
         VALUE(eo_worksheet) TYPE REF TO zcl_excel_worksheet
       RAISING
         zcx_excel .
+    METHODS clone_worksheet
+      IMPORTING
+        !io_worksheet       TYPE REF TO zcl_excel_worksheet
+        !ip_title           TYPE zexcel_sheet_title OPTIONAL
+      RETURNING
+        VALUE(ro_worksheet) TYPE REF TO zcl_excel_worksheet
+      RAISING
+        zcx_excel.
     METHODS add_static_styles .
     METHODS constructor .
     METHODS delete_worksheet
@@ -260,6 +268,31 @@ CLASS zcl_excel IMPLEMENTATION.
 
     worksheets->add( eo_worksheet ).
     worksheets->active_worksheet = worksheets->size( ).
+  ENDMETHOD.
+
+
+  METHOD clone_worksheet.
+    DATA lo_worksheet_clone TYPE REF TO zcl_excel_worksheet.
+    DATA lo_autofilter TYPE REF TO zcl_excel_autofilter.
+    DATA lo_new_autofilter TYPE REF TO zcl_excel_autofilter.
+
+    lo_worksheet_clone ?= io_worksheet->clone( ).
+
+    IF ip_title IS NOT INITIAL.
+      lo_worksheet_clone->set_title( ip_title ).
+    ENDIF.
+
+    lo_autofilter = autofilters->get( io_worksheet ).
+    IF lo_autofilter IS BOUND.
+      lo_new_autofilter = autofilters->add( lo_worksheet_clone ).
+      lo_new_autofilter->set_filter_area( lo_autofilter->get_filter_area( ) ).
+      lo_new_autofilter->set_values( lo_autofilter->get_values( ) ).
+    ENDIF.
+
+    worksheets->add( lo_worksheet_clone ).
+    worksheets->active_worksheet = worksheets->size( ).
+
+    ro_worksheet = lo_worksheet_clone.
   ENDMETHOD.
 
 

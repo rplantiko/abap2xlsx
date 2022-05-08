@@ -1,6 +1,7 @@
 CLASS zcl_excel_worksheet DEFINITION
   PUBLIC
-  CREATE PUBLIC .
+  CREATE PUBLIC
+  INHERITING FROM zcl_excel_base.
 
   PUBLIC SECTION.
 *"* public components of class ZCL_EXCEL_WORKSHEET
@@ -305,6 +306,7 @@ CLASS zcl_excel_worksheet DEFINITION
       RAISING
         zcx_excel .
     CLASS-METHODS class_constructor .
+    METHODS clone REDEFINITION.
     METHODS constructor
       IMPORTING
         !ip_excel TYPE REF TO zcl_excel
@@ -1992,6 +1994,8 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
 
   METHOD constructor.
     DATA: lv_title TYPE zexcel_sheet_title.
+
+    super->constructor( ).
 
     me->excel = ip_excel.
 
@@ -4407,4 +4411,196 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
   METHOD zif_excel_sheet_vba_project~set_codename_pr.
     me->zif_excel_sheet_vba_project~codename_pr = ip_codename_pr.
   ENDMETHOD.                    "ZIF_EXCEL_SHEET_VBA_PROJECT~SET_CODENAME_PR
+
+
+  METHOD clone.
+    DATA: lo_excel_worksheet TYPE REF TO zcl_excel_worksheet,
+          lo_drawing         TYPE REF TO zcl_excel_drawing,
+          lo_new_drawing     TYPE REF TO zcl_excel_drawing,
+          lo_range           TYPE REF TO zcl_excel_range,
+          lo_new_range       TYPE REF TO zcl_excel_range,
+          lo_iterator        TYPE REF TO zcl_excel_collection_iterator,
+          lv_range           TYPE string,
+          lv_sheet_name      TYPE zexcel_sheet_title,
+          lv_start_row       TYPE zexcel_cell_row,
+          lv_start_column    TYPE zexcel_cell_column_alpha,
+          lv_stop_row        TYPE zexcel_cell_row,
+          lv_stop_column     TYPE zexcel_cell_column_alpha,
+          lo_table           TYPE REF TO zcl_excel_table,
+          lo_new_table       TYPE REF TO zcl_excel_table,
+          lv_table_id        TYPE i.
+
+
+    CREATE OBJECT lo_excel_worksheet
+      EXPORTING
+        ip_excel = excel.
+
+    IF charts IS BOUND.
+      lo_iterator = charts->get_iterator( ).
+      WHILE lo_iterator->has_next( ) = abap_true.
+        lo_drawing ?= lo_iterator->get_next( ).
+        lo_new_drawing = excel->add_new_drawing(
+                         ip_type  = lo_drawing->get_type( )
+                         ip_title = lo_drawing->title ).
+        lo_drawing->clone_attributes_to( lo_new_drawing ).
+        lo_excel_worksheet->add_drawing( lo_new_drawing ).
+      ENDWHILE.
+    ENDIF.
+
+    IF columns IS BOUND.
+      lo_excel_worksheet->columns ?= columns->clone( ).
+    ENDIF.
+
+    IF column_default IS BOUND.
+      lo_excel_worksheet->column_default ?= column_default->clone( ).
+    ENDIF.
+
+    IF comments IS BOUND.
+      lo_excel_worksheet->comments ?= comments->clone( ).
+    ENDIF.
+
+    IF data_validations IS BOUND.
+      lo_excel_worksheet->data_validations ?= data_validations->clone( ).
+    ENDIF.
+
+    IF drawings IS BOUND.
+      IF drawings->size( ) > 0.
+        ASSERT 1 = 1. " For quick debug
+      ENDIF.
+      lo_excel_worksheet->drawings ?= drawings->clone( ).
+    ENDIF.
+
+    IF hyperlinks IS BOUND.
+      lo_excel_worksheet->hyperlinks ?= hyperlinks->clone( ).
+    ENDIF.
+
+    IF mo_pagebreaks IS BOUND.
+      lo_excel_worksheet->mo_pagebreaks ?= mo_pagebreaks->clone( ).
+    ENDIF.
+
+    IF ranges IS BOUND.
+      lo_iterator = ranges->get_iterator( ).
+      WHILE lo_iterator->has_next( ) = abap_true.
+        lo_range ?= lo_iterator->get_next( ).
+
+        lo_new_range = lo_excel_worksheet->add_new_range( ).
+        lo_new_range->name = lo_range->name.
+
+        IF lo_range->get_value( ) CS ','.
+          " Dirty solution for named range with 2 or more areas (especially print settings, repeated columns and rows),
+          " hopefully abap2xlsx will better support this in the future.
+          lv_range = replace( val  = lo_range->get_value( )
+                              sub  = get_title( ) && '!'
+                              with = lo_excel_worksheet->get_title( ) && '!'
+                              occ  = 0 ).
+          lo_new_range->set_range_value( lv_range ).
+        ELSE.
+          lo_range->get_value2(
+            IMPORTING
+              ep_sheet_name   = lv_sheet_name
+              ep_start_row    = lv_start_row
+              ep_start_column = lv_start_column
+              ep_stop_row     = lv_stop_row
+              ep_stop_column  = lv_stop_column  ).
+          IF lv_sheet_name = get_title( ).
+            lv_sheet_name = lo_excel_worksheet->get_title( ).
+          ENDIF.
+          lo_new_range->set_value(
+              ip_sheet_name   = lv_sheet_name
+              ip_start_row    = lv_start_row
+              ip_start_column = lv_start_column
+              ip_stop_row     = lv_stop_row
+              ip_stop_column  = lv_stop_column ).
+        ENDIF.
+      ENDWHILE.
+    ENDIF.
+
+    IF rows IS BOUND.
+      lo_excel_worksheet->rows ?= rows->clone( ).
+    ENDIF.
+
+    IF row_default IS BOUND.
+      lo_excel_worksheet->row_default ?= row_default->clone( ).
+    ENDIF.
+
+    IF sheet_setup IS BOUND.
+      lo_excel_worksheet->sheet_setup ?= sheet_setup->clone( ).
+    ENDIF.
+
+    IF styles_cond IS BOUND.
+      lo_excel_worksheet->styles_cond ?= styles_cond->clone( ).
+    ENDIF.
+
+    IF tables IS BOUND.
+      lo_iterator = tables->get_iterator( ).
+      WHILE lo_iterator->has_next( ) = abap_true.
+        lo_table ?= lo_iterator->get_next( ).
+        lo_new_table ?= lo_table->clone( ).
+        lv_table_id = excel->get_next_table_id( ).
+        lo_new_table->set_id( iv_id = lv_table_id ).
+        lo_excel_worksheet->tables->add( lo_new_table ).
+      ENDWHILE.
+    ENDIF.
+
+    lo_excel_worksheet->active_cell               = active_cell.
+    lo_excel_worksheet->column_formulas           = column_formulas.
+    lo_excel_worksheet->default_excel_date_format = default_excel_date_format.
+    lo_excel_worksheet->default_excel_time_format = default_excel_time_format.
+    lo_excel_worksheet->excel                     = excel.
+    lo_excel_worksheet->freeze_pane_cell_column   = freeze_pane_cell_column.
+    lo_excel_worksheet->freeze_pane_cell_row      = freeze_pane_cell_row.
+    lo_excel_worksheet->lower_cell                = lower_cell.
+    lo_excel_worksheet->mt_ignored_errors         = mt_ignored_errors.
+    lo_excel_worksheet->mt_merged_cells           = mt_merged_cells.
+    lo_excel_worksheet->mt_row_outlines           = mt_row_outlines.
+    lo_excel_worksheet->print_gridlines           = print_gridlines.
+    lo_excel_worksheet->print_title_col_from      = print_title_col_from.
+    lo_excel_worksheet->print_title_col_to        = print_title_col_to.
+    lo_excel_worksheet->print_title_row_from      = print_title_row_from.
+    lo_excel_worksheet->print_title_row_to        = print_title_row_to.
+    lo_excel_worksheet->right_to_left             = right_to_left.
+    lo_excel_worksheet->sheet_content             = sheet_content.
+    lo_excel_worksheet->show_gridlines            = show_gridlines.
+    lo_excel_worksheet->show_rowcolheaders        = show_rowcolheaders.
+    lo_excel_worksheet->styles                    = styles.
+    lo_excel_worksheet->tabcolor                  = tabcolor.
+    lo_excel_worksheet->upper_cell                = upper_cell.
+
+    lo_excel_worksheet->zif_excel_sheet_properties~hidden                    = zif_excel_sheet_properties~hidden.
+    lo_excel_worksheet->zif_excel_sheet_properties~hide_columns_from         = zif_excel_sheet_properties~hide_columns_from.
+    lo_excel_worksheet->zif_excel_sheet_properties~selected                  = zif_excel_sheet_properties~selected.
+    lo_excel_worksheet->zif_excel_sheet_properties~show_zeros                = zif_excel_sheet_properties~show_zeros.
+    lo_excel_worksheet->zif_excel_sheet_properties~style                     = zif_excel_sheet_properties~style.
+    lo_excel_worksheet->zif_excel_sheet_properties~summarybelow              = zif_excel_sheet_properties~summarybelow.
+    lo_excel_worksheet->zif_excel_sheet_properties~summaryright              = zif_excel_sheet_properties~summaryright.
+    lo_excel_worksheet->zif_excel_sheet_properties~zoomscale                 = zif_excel_sheet_properties~zoomscale.
+    lo_excel_worksheet->zif_excel_sheet_properties~zoomscale_normal          = zif_excel_sheet_properties~zoomscale_normal.
+    lo_excel_worksheet->zif_excel_sheet_properties~zoomscale_pagelayoutview  = zif_excel_sheet_properties~zoomscale_pagelayoutview.
+    lo_excel_worksheet->zif_excel_sheet_properties~zoomscale_sheetlayoutview = zif_excel_sheet_properties~zoomscale_sheetlayoutview.
+
+    lo_excel_worksheet->zif_excel_sheet_protection~auto_filter           = zif_excel_sheet_protection~auto_filter.
+    lo_excel_worksheet->zif_excel_sheet_protection~delete_columns        = zif_excel_sheet_protection~delete_columns.
+    lo_excel_worksheet->zif_excel_sheet_protection~delete_rows           = zif_excel_sheet_protection~delete_rows.
+    lo_excel_worksheet->zif_excel_sheet_protection~format_cells          = zif_excel_sheet_protection~format_cells.
+    lo_excel_worksheet->zif_excel_sheet_protection~format_columns        = zif_excel_sheet_protection~format_columns.
+    lo_excel_worksheet->zif_excel_sheet_protection~format_rows           = zif_excel_sheet_protection~format_rows.
+    lo_excel_worksheet->zif_excel_sheet_protection~insert_columns        = zif_excel_sheet_protection~insert_columns.
+    lo_excel_worksheet->zif_excel_sheet_protection~insert_hyperlinks     = zif_excel_sheet_protection~insert_hyperlinks.
+    lo_excel_worksheet->zif_excel_sheet_protection~insert_rows           = zif_excel_sheet_protection~insert_rows.
+    lo_excel_worksheet->zif_excel_sheet_protection~objects               = zif_excel_sheet_protection~objects.
+    lo_excel_worksheet->zif_excel_sheet_protection~password              = zif_excel_sheet_protection~password.
+    lo_excel_worksheet->zif_excel_sheet_protection~pivot_tables          = zif_excel_sheet_protection~pivot_tables.
+    lo_excel_worksheet->zif_excel_sheet_protection~protected             = zif_excel_sheet_protection~protected.
+    lo_excel_worksheet->zif_excel_sheet_protection~scenarios             = zif_excel_sheet_protection~scenarios.
+    lo_excel_worksheet->zif_excel_sheet_protection~select_locked_cells   = zif_excel_sheet_protection~select_locked_cells.
+    lo_excel_worksheet->zif_excel_sheet_protection~select_unlocked_cells = zif_excel_sheet_protection~select_unlocked_cells.
+    lo_excel_worksheet->zif_excel_sheet_protection~sheet                 = zif_excel_sheet_protection~sheet.
+    lo_excel_worksheet->zif_excel_sheet_protection~sort                  = zif_excel_sheet_protection~sort.
+
+    lo_excel_worksheet->zif_excel_sheet_vba_project~codename    = zif_excel_sheet_vba_project~codename.
+    lo_excel_worksheet->zif_excel_sheet_vba_project~codename_pr = zif_excel_sheet_vba_project~codename_pr.
+    lo_excel_worksheet->zif_excel_sheet_vba_project~vbaproject  = zif_excel_sheet_vba_project~vbaproject.
+
+    ro_object = lo_excel_worksheet.
+  ENDMETHOD.
 ENDCLASS.

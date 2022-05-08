@@ -22,6 +22,7 @@ CLASS zcl_excel_graph_pie DEFINITION
     DATA ns_showbubblesizeval TYPE string VALUE '0'. "#EC NOTEXT .  .  .  .  .  .  .  .  .  . " .
     DATA ns_showleaderlinesval TYPE string VALUE '1'. "#EC NOTEXT .  .  .  .  .  .  .  .  .  . " .
 
+    METHODS clone REDEFINITION.
     METHODS set_show_legend_key
       IMPORTING
         !ip_value TYPE c .
@@ -46,6 +47,7 @@ CLASS zcl_excel_graph_pie DEFINITION
   PROTECTED SECTION.
 *"* protected components of class ZCL_EXCEL_GRAPH_PIE
 *"* do not include other source files here!!!
+    METHODS clone_attributes_to REDEFINITION.
   PRIVATE SECTION.
 *"* private components of class ZCL_EXCEL_GRAPH_PIE
 *"* do not include other source files here!!!
@@ -53,7 +55,40 @@ ENDCLASS.
 
 
 
-CLASS zcl_excel_graph_pie IMPLEMENTATION.
+CLASS ZCL_EXCEL_GRAPH_PIE IMPLEMENTATION.
+
+
+  METHOD clone.
+    DATA: lo_pie TYPE REF TO zcl_excel_graph_pie.
+
+    CREATE OBJECT lo_pie TYPE zcl_excel_graph_pie.
+    clone_attributes_to( lo_pie ).
+
+    ro_object = lo_pie.
+  ENDMETHOD.
+
+
+  METHOD clone_attributes_to.
+    DATA: lo_pie TYPE REF TO zcl_excel_graph_pie.
+
+    super->clone_attributes_to( io_excel_graph ).
+
+    lo_pie ?= io_excel_graph.
+    lo_pie->ns_legendposval       = ns_legendposval.
+    lo_pie->ns_overlayval         = ns_overlayval.
+    lo_pie->ns_pprrtl             = ns_pprrtl.
+    lo_pie->ns_endpararprlang     = ns_endpararprlang.
+    lo_pie->ns_varycolorsval      = ns_varycolorsval.
+    lo_pie->ns_firstsliceangval   = ns_firstsliceangval.
+    lo_pie->ns_showlegendkeyval   = ns_showlegendkeyval.
+    lo_pie->ns_showvalval         = ns_showvalval.
+    lo_pie->ns_showcatnameval     = ns_showcatnameval.
+    lo_pie->ns_showsernameval     = ns_showsernameval.
+    lo_pie->ns_showpercentval     = ns_showpercentval.
+    lo_pie->ns_showbubblesizeval  = ns_showbubblesizeval.
+    lo_pie->ns_showleaderlinesval = ns_showleaderlinesval.
+
+  ENDMETHOD.
 
 
   METHOD set_show_cat_name.
