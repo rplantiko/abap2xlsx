@@ -1,4 +1,4 @@
-﻿<?xml version="1.0" encoding="utf-8"?>
+<?xml version="1.0" encoding="utf-8"?>
 <abapGit version="v1.0.0" serializer="LCL_OBJECT_CLAS" serializer_version="v1.0.0">
  <asx:abap xmlns:asx="http://www.sap.com/abapxml" version="1.0">
   <asx:values>
@@ -246,7 +246,7 @@
     <SEOCOMPOTX>
      <CMPNAME>GET_COMMENTS</CMPNAME>
      <LANGU>E</LANGU>
-     <DESCRIPT>Get a copy of the comments object</DESCRIPT>
+     <DESCRIPT>Get the comments instance</DESCRIPT>
     </SEOCOMPOTX>
     <SEOCOMPOTX>
      <CMPNAME>GET_DATA_VALIDATIONS_ITERATOR</CMPNAME>
@@ -620,6 +620,12 @@
     </SEOCOMPOTX>
    </DESCRIPTIONS>
    <DESCRIPTIONS_SUB>
+    <SEOSUBCOTX>
+     <CMPNAME>GET_COMMENTS</CMPNAME>
+     <SCONAME>R_COMMENTS</SCONAME>
+     <LANGU>E</LANGU>
+     <DESCRIPT>Comments instance of this worksheet</DESCRIPT>
+    </SEOSUBCOTX>
     <SEOSUBCOTX>
      <CMPNAME>REMOVE_COMMENT</CMPNAME>
      <SCONAME>IO_COMMENT</SCONAME>

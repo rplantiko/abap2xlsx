@@ -397,6 +397,8 @@ CLASS zcl_excel_worksheet DEFINITION
       RAISING
         zcx_excel .
     METHODS get_comments
+      IMPORTING
+        iv_copy_collection TYPE flag DEFAULT abap_true
       RETURNING
         VALUE(r_comments) TYPE REF TO zcl_excel_comments .
     METHODS get_drawings
@@ -1966,7 +1968,25 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
     ENDIF.
 
     lo_style = excel->get_style_from_guid( ip_style ).
-    ls_font = lo_style->font->get_structure(  ).
+    IF lo_style IS BOUND.
+      ls_font  = lo_style->font->get_structure( ).
+    ENDIF.
+
+    lv_next_rtf_offset = 0.
+    LOOP AT ct_rtf ASSIGNING <rtf>.
+      lv_tabix = sy-tabix.
+      IF lv_next_rtf_offset < <rtf>-offset.
+        ls_rtf-offset = lv_next_rtf_offset.
+        ls_rtf-length = <rtf>-offset - lv_next_rtf_offset.
+        ls_rtf-font   = ls_font.
+        INSERT ls_rtf INTO ct_rtf INDEX lv_tabix.
+      ELSEIF lv_next_rtf_offset > <rtf>-offset.
+        RAISE EXCEPTION TYPE zcx_excel
+          EXPORTING
+            error = 'Gaps or overlaps in RTF data offset/length specs'.
+      ENDIF.
+      lv_next_rtf_offset = <rtf>-offset + <rtf>-length.
+    ENDLOOP.
 
     zcl_excel_common=>check_rtf(
     EXPORTING
@@ -2589,10 +2609,14 @@ CLASS zcl_excel_worksheet IMPLEMENTATION.
 
   METHOD get_comments.
 
-* Create a copy of the comments attribute
-    CREATE OBJECT r_comments
-      EXPORTING
-        io_from = comments.
+    IF iv_copy_collection = abap_true.
+* By default, get_comments copies the collection (backward compatibility)
+      CREATE OBJECT r_comments
+        EXPORTING
+          io_from = comments.
+    ELSE.
+      r_comments = comments.
+    ENDIF.
 
   ENDMETHOD.                    "get_comments
 
